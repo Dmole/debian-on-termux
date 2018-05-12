@@ -41,8 +41,9 @@ $DO_FIRST_STAGE && {
 apt update 2>&1 | filter
 DEBIAN_FRONTEND=noninteractive apt -y install perl proot 2>&1 | filter                              
 rm -rf debootstrap
-wget http://http.debian.net/debian/pool/main/d/debootstrap/debootstrap_1.0.97.tar.gz -O - | tar xfz -
-ln -nfs debootstrap-1.0.97 debootstrap
+V=$(wget http://cdn-fastly.deb.debian.org/debian/pool/main/d/debootstrap/ -qO - | perl -pe 's/<.*?>/ /g' | grep -E '\.[0-9]+\.tar\.gz' | tail -n 1 | perl -pe 's/^ +//g;s/.tar.gz .*//g')
+wget http://http.debian.net/debian/pool/main/d/debootstrap/$V.tar.gz -O - | tar xfz -
+ln -nfs $V debootstrap
 cd debootstrap
 #
 # minimum patch needed for debootstrap to work in this environment
