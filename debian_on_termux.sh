@@ -42,14 +42,14 @@ $DO_FIRST_STAGE && {
 apt update 2>&1 | filter
 DEBIAN_FRONTEND=noninteractive apt -y install perl proot 2>&1 | filter                              
 rm -rf debootstrap
-V=debootstrap-1.0.95
-wget https://github.com/sp4rkie/debian-on-termux/files/1991333/$V.tgz.zip -O - | tar xfz -
+V=$(wget http://cdn-fastly.deb.debian.org/debian/pool/main/d/debootstrap/ -qO - | perl -pe 's/<.*?>/ /g' | grep -E '\.[0-9]+\.tar\.gz' | tail -n 1 | perl -pe 's/^ +//g;s/.tar.gz .*//g')
+wget http://http.debian.net/debian/pool/main/d/debootstrap/$V.tar.gz -O - | tar xfz -
 ln -nfs $V debootstrap
 cd debootstrap
 #
 # minimum patch needed for debootstrap to work in this environment
 #
-echo << 'EOF'
+patch << 'EOF'
 --- debootstrap-1.0.91.1/functions	2017-07-25 05:02:27.000000000 +0200
 +++ debootstrap-1.0.91/functions	2017-10-16 18:23:46.707005005 +0200
 @@ -1083,6 +1083,10 @@
@@ -73,8 +73,17 @@ echo << 'EOF'
 +
  	# The list of devices that can be created in a container comes from
  	# src/core/cgroup.c in the systemd source tree.
- 	mknod -m 666 $TARGET/dev/null	c 1 3
+	mknod -m 666 $TARGET/dev/null	c 1 3
 EOF
+|| {
+	echo "patching $V failed using fallback"
+	cd ..
+	rm -rf debootstrap
+	V=debootstrap-1.0.95
+	wget https://github.com/sp4rkie/debian-on-termux/files/1991333/$V.tgz.zip -O - | tar xfz -
+	ln -nfs $V debootstrap
+	cd debootstrap
+}
 #
 # you can watch the debootstrap progress via
 # tail -F $HOME/$ROOTFS_TOP/debootstrap/debootstrap.log
